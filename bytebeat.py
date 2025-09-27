@@ -23,7 +23,7 @@ class ByteBeat:
             pygame.display.set_icon(icon)
 
         self.p = pyaudio.PyAudio()
-        self.bytes = [-1]*(buffer_size*2//samples_per_pixel*samples_per_pixel)
+        self.bytes = [[-1]*(buffer_size*2//samples_per_pixel*samples_per_pixel) for _ in range(channels)]
         self.idx = 0
         
         def callback(in_data, frame_count, time_info, status):
@@ -31,15 +31,19 @@ class ByteBeat:
             for t in range(frame_count):
                 try:
                     v = func(self.T+t)
+                    if not isinstance(v,list): v = [v]
                 except:
-                    v = 0
+                    v = [0] * channels
 
-                v = int(v%256)
+                v = list(map(lambda x:int(x%256), v))
 
-                buf.append(v)
-                self.bytes[self.idx] = v
+                buf.extend(v)
+
+                for i in range(channels):
+                    self.bytes[i][self.idx] = v[i]
+
                 self.idx += 1
-                self.idx %= len(self.bytes)
+                self.idx %= len(self.bytes[0])
 
             self.T += frame_count
                 
@@ -65,8 +69,8 @@ class ByteBeat:
         clock = pygame.time.Clock()
 
         idx = 0
-        premn = 0
-        premx = 255
+        premn = [0]*channels
+        premx = [255]*channels
 
         while 1:
             dt = clock.tick(sample_rate)
@@ -78,23 +82,34 @@ class ByteBeat:
                     sys.exit()
 
             while self.scroll >= samples_per_pixel:
-                mn = min(self.bytes[idx:idx+samples_per_pixel])
-                mx = max(self.bytes[idx:idx+samples_per_pixel])
+                self.screen.scroll(-1)
 
-                if 0 <= mn <= mx:
-                    self.screen.scroll(-1)
+                avg = 0
 
-                    avg = sum(self.bytes[idx:idx+samples_per_pixel])//samples_per_pixel
+                out = []
+
+                for i in range(channels):
+                    mn = min(self.bytes[i][idx:idx+samples_per_pixel])
+                    mx = max(self.bytes[i][idx:idx+samples_per_pixel])
+
+                    avg += sum(self.bytes[i][idx:idx+samples_per_pixel])//samples_per_pixel
+
+                    premn[i],premx[i],mn,mx = mn,mx,min(premx[i],mn),max(premn[i],mx)
                     
-                    idx += samples_per_pixel
-                    idx %= len(self.bytes)
-
-                    premn,premx,mn,mx = mn,mx,min(premx,mn),max(premn,mx)
-
-                    self.screen.fill((0,avg//2,avg),(self.width-1,0,1,self.height))
                     mn = self.height - mn*self.height//256 - 1
                     mx = self.height - mx*self.height//256 - 1
-                    self.screen.fill((255,255,255),(self.width-1,mx,1,mn-mx+1))
+                    col = [[],[(255,255,255)],[(0,255,0),(255,0,255)]][channels][i]
+                    out.append((mx,mn,col))
+
+                avg //= channels
+                if avg >= 0:
+                    idx += samples_per_pixel
+                    idx %= len(self.bytes[0])
+
+                    self.screen.fill((0,avg//2,avg),(self.width-1,0,1,self.height))
+
+                    for mx,mn,col in out:
+                        self.screen.fill(col,(self.width-1,mx,1,mn-mx+1),special_flags=pygame.BLEND_ADD)
 
                 self.scroll -= samples_per_pixel
 

@@ -64,9 +64,10 @@ def func(t):
 
     master = saws * sidechain + (kick + snare) * (t % 524288 <= 262144) + hihat
 
-    return master*2
+    return [master*2,255-master*2]
 
 bytebeat = ByteBeat(
     func=func,
+    channels=2,
     width=512
 )
