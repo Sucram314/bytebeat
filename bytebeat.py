@@ -71,7 +71,7 @@ class ByteBeat:
         while 1:
             dt = clock.tick(sample_rate)
 
-            self.scroll += dt*sample_rate//1000
+            self.scroll += dt*sample_rate/1000
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:

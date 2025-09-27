@@ -9,7 +9,7 @@ def envelope(t):
 def soft_clipper(x,order=10):
     return 1/(1+exp(-order*(x-0.5)))
 
-def func(t):
+def func(t):    
     saws = 0
 
     saws += ((t*2*2**(
@@ -49,16 +49,20 @@ def func(t):
     kick_times = [0,16384,22528,32768,49152,52224,55296]
     t_kick = t%65536-max(i for i in kick_times if i <= t%65536)
     kick_envelope = envelope(t_kick)
-    kick = soft_clipper((1-cos(49152/(t_kick+384)))*0.5 * kick_envelope) * 60
+    kick = soft_clipper((1-cos(65536/(t_kick+512)))*0.5 * kick_envelope) * 60
 
     snare_times = [-65536,8192,24576]
     t_snare = t%32768-max(i for i in snare_times if i <= t%32768)
     snare_envelope = envelope(t_snare)
     snare = soft_clipper(((1-cos(131072/(t_snare+512)))*0.5 + random())*0.5 * snare_envelope) * 60
 
-    sidechain = (1 - kick_envelope*0.7 - snare_envelope*0.5)
+    t_hihat = t%4096
+    hihat_envelope = envelope(t_hihat*4)
+    hihat = random()*30*hihat_envelope
 
-    master = saws * sidechain + kick + snare
+    sidechain = (1 - kick_envelope*0.8 - snare_envelope*0.5)
+
+    master = saws * sidechain + (kick + snare) * (t % 524288 <= 262144) + hihat
 
     return master*2
 
