@@ -9,7 +9,7 @@ def envelope(t):
 def soft_clipper(x,order=10):
     return 1/(1+exp(-order*(x-0.5)))
 
-def func(t):    
+def func(t):
     saws = 0
 
     saws += ((t*2*2**(
@@ -113,5 +113,9 @@ def func(t):
 bytebeat = ByteBeat(
     func=func,
     channels=2,
-    width=512
+    width=1024,
 )
+
+# bytebeat.save("output.wav",262144)
+
+bytebeat.play()
