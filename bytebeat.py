@@ -96,10 +96,14 @@ class ByteBeat:
 
                     premn[i],premx[i],mn,mx = mn,mx,min(premx[i],mn),max(premn[i],mx)
                     
-                    mn = self.height - mn*self.height//256 - 1
-                    mx = self.height - mx*self.height//256 - 1
+                    mn = mn*self.height//256
+                    mx = mx*self.height//256
+
+                    if i == 0:
+                        mn,mx = self.height - mx - 1, self.height - mn - 1
+
                     col = [[],[(255,255,255)],[(0,255,0),(255,0,255)]][channels][i]
-                    out.append((mx,mn,col))
+                    out.append((mn,mx,col))
 
                 avg //= channels
                 if avg >= 0:
@@ -108,8 +112,8 @@ class ByteBeat:
 
                     self.screen.fill((0,avg//2,avg),(self.width-1,0,1,self.height))
 
-                    for mx,mn,col in out:
-                        self.screen.fill(col,(self.width-1,mx,1,mn-mx+1),special_flags=pygame.BLEND_ADD)
+                    for mn,mx,col in out:
+                        self.screen.fill(col,(self.width-1,mn,1,mx-mn+1),special_flags=pygame.BLEND_ADD)
 
                 self.scroll -= samples_per_pixel
 
