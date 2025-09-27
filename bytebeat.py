@@ -53,7 +53,7 @@ class ByteBeat:
             pygame.display.set_icon(icon)
 
         self.p = pyaudio.PyAudio()
-        self.bytes = [[-1]*(self.buffer_size*2//self.samples_per_pixel*self.samples_per_pixel) for _ in range(self.channels)]
+        self.bytes = [[-1]*(self.buffer_size*3//self.samples_per_pixel*self.samples_per_pixel) for _ in range(self.channels)]
         self.idx = 0
         
         def callback(in_data, frame_count, time_info, status):
@@ -96,6 +96,10 @@ class ByteBeat:
 
         atexit.register(close)
 
+        if not self.display:
+            while 1:
+                pass
+            
         clock = pygame.time.Clock()
 
         idx = 0
